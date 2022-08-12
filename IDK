@@ -1,0 +1,82 @@
+def post_reply_poll(link):
+    for _ in range(5):
+        try:
+            driver = get_twitter_driver(link)
+            break
+        except BaseException:
+            pass
+
+    driver.find_element("xpath", "//div[@aria-label='Reply']").click()
+    driver.find_element("xpath", "//div[@aria-label='Add poll']").click()
+
+    time.sleep(1)
+
+    driver.find_element("name", "Choice1").send_keys("Yes")
+    driver.find_element("name", "Choice2").send_keys("No")
+
+    time.sleep(1)
+    Select(driver.find_element("xpath", 
+        "//span[.='Days']//..//..//select")).select_by_visible_text("0")
+    Select(driver.find_element("xpath",
+        "//span[.='Hours']//..//..//select")).select_by_visible_text("1")
+    Select(driver.find_element("xpath",
+        "//span[.='Minutes']//..//..//select")).select_by_visible_text("0")
+
+    time.sleep(1)
+    driver.find_element("xpath", "//div[@aria-label='Tweet text']").send_keys(
+        "Should this punt's Surrender Index be canceled?")
+
+    time.sleep(1)
+    driver.find_element("xpath" ,"//div[@data-testid='tweetButton']").click()
+
+    time.sleep(10)
+    driver.close()
+
+
+def check_reply(link):
+    time.sleep(61 * 60)  # Wait one hour and one minute to check reply
+    driver = get_game_driver(headless=False)
+    driver.get(link)
+
+    time.sleep(3)
+
+    poll_title = driver.find_element("xpath", "//*[contains(text(), 'votes')]")
+    poll_content = poll_title.find_element("xpath", "./../../../..")
+    poll_result = poll_content.find_elements("tag name", "span")
+    poll_values = [poll_result[2], poll_result[5]]
+    poll_floats = list(
+        map(lambda x: float(x.get_attribute("innerHTML").strip('%')),
+            poll_values))
+
+    driver.close()
+    time_print(("checking poll results: ", poll_floats))
+    return poll_floats[0] >= 66.67 if len(poll_floats) == 2 else None
+
+
+def cancel_punt(orig_status, full_text):
+    global ninety_api
+    global cancel_api
+
+    ninety_api.destroy_status(orig_status['id'])
+    cancel_status = cancel_api.update_status(full_text)._json
+    new_cancel_text = 'CANCELED https://twitter.com/CancelSurrender/status/' + \
+        cancel_status['id_str']
+
+    time.sleep(10)
+    ninety_api.update_status(new_cancel_text)
+
+
+def handle_cancel(orig_status, full_text):
+    try:
+        orig_link = 'https://twitter.com/surrender_idx90/status/' + \
+            orig_status['id_str']
+        post_reply_poll(orig_link)
+        if check_reply(orig_link):
+            cancel_punt(orig_status, full_text)
+    except Exception as e:
+        traceback.print_exc()
+        time_print("An error occurred when trying to handle canceling a tweet")
+        time_print(orig_status)
+        time_print(e)
+        send_error_message(
+            e, "An error occurred when trying to handle canceling a tweet")
