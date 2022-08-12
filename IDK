@@ -24,7 +24,7 @@ def post_reply_poll(link):
 
     time.sleep(1)
     driver.find_element("xpath", "//div[@aria-label='Tweet text']").send_keys(
-        "Should this punt's Surrender Index be canceled?")
+        "Should this homerun count?")
 
     time.sleep(1)
     driver.find_element("xpath" ,"//div[@data-testid='tweetButton']").click()
