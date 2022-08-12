@@ -59,7 +59,7 @@ def cancel_punt(orig_status, full_text):
 
     ninety_api.destroy_status(orig_status['id'])
     cancel_status = cancel_api.update_status(full_text)._json
-    new_cancel_text = 'CANCELED https://twitter.com/CancelSurrender/status/' + \
+    new_cancel_text = 'COUNTS https://twitter.com/AverageDMVFan/status/' + \
         cancel_status['id_str']
 
     time.sleep(10)
@@ -68,7 +68,7 @@ def cancel_punt(orig_status, full_text):
 
 def handle_cancel(orig_status, full_text):
     try:
-        orig_link = 'https://twitter.com/surrender_idx90/status/' + \
+        orig_link = 'https://twitter.com/MLBHR/status/' + \
             orig_status['id_str']
         post_reply_poll(orig_link)
         if check_reply(orig_link):
